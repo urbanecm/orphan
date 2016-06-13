@@ -17,3 +17,6 @@ for item in j:
 			r.append("Diskuse k Wikipedii:" + item[2])
 		elif item[1] == 101:
 			r.append("Diskuse k portálu:" + item[2])
+
+for i in r:
+	print i
