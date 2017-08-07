@@ -1,15 +1,27 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+import pywikibot
+site = pywikibot.Site()
+import requests
 from wmflabs import db
 conn = db.connect('cswiki')
-import json
 
-sql = u'SELECT page.page_id, page.page_namespace, page.page_title, page_1.page_title, page_1.page_id, page_1.page_namespace FROM page LEFT JOIN page AS page_1 ON (page.page_namespace = page_1.page_namespace+1) AND (page.page_title = page_1.page_title) WHERE (page.page_namespace=1) AND (page_1.page_title Is Null);'
+params = {
+	"action": "query",
+	"format": "json",
+	"meta": "siteinfo",
+	"siprop": "namespaces"
+}
+r = requests.get('https://cs.wikipedia.org/w/api.php', params=params)
+namespaces = r.json()['query']['namespaces']
+
 cur = conn.cursor()
 with cur:
+	sql = open('sql.sql').read()
 	cur.execute(sql)
 	data = cur.fetchall()
 
-r_f = open('result.json', 'w')
-r_f.write(json.dumps(data))
+for row in data:
+	page = pywikibot.Page(site, namespaces[str(row[0])]['*'] + u':' + row[1].decode('utf-8'))
+	page.delete(reason=u"Robot: Osiřelá diskusní stránka", mark=True)
